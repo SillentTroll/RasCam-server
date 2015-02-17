@@ -9,7 +9,7 @@ Does the management of the configured cameras and captured images.
  - [MongoDB](https://www.mongodb.com) as the database
  - [Redis](http://redis.io) for caching
 
-##Instalation
+##Installation
 I have decided to use [Docker](https://www.docker.com) and [Fig](http://www.fig.sh) for app management and deploy.
 So, assuming your already have a server accessible from your Raspberry Pi device, ssh into it and execute:
 
