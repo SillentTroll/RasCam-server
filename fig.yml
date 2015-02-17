@@ -1,0 +1,16 @@
+web:
+ build: .
+ ports:
+ - "80:5000"
+ volumes:
+ - .:/opt/webapp
+ links:
+ - db
+ - redis
+db:
+ image: dockerfile/mongodb
+ ports:
+  - "27027:27017"
+ command: mongod --smallfiles
+redis:
+ image: dockerfile/redis

@@ -1,0 +1,12 @@
+passlib
+Flask >= 0.10.1
+flask-restful
+flask-jwt
+itsdangerous
+simplejson
+requests
+fuzzywuzzy
+wtforms
+pymongo
+uwsgi
+redis

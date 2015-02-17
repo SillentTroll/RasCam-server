@@ -1,0 +1,51 @@
+<div ng-include src="'static/partials/navbar.html'"></div>
+
+<div class="container" ng-controller="CamListCtrl as camCtrl">
+    <div class="page-header">
+        <h2>Your cameras</h2>
+    </div>
+
+    <div class="row" ng-show="cameras">
+        <div class="col-xs-12">
+            <div ng-repeat="camera in cameras">
+                <div ng-class="{'panel panel-primary':camera.active, 'panel panel-info':!camera.active}">
+                    <div class="panel-heading clearfix">
+                        <h4 class="pull-left">{{camera.name}}</h4>
+
+                        <div class="btn-group pull-right">
+                            <button type="button" class="btn btn-default dropdown-toggle"
+                                    data-toggle="dropdown" aria-expanded="false">
+                                Actions <span class="caret"></span>
+                            </button>
+                            <ul class="dropdown-menu" role="menu">
+                                <li>
+                                    <a ng-click="camCtrl.change_state(camera.id)">
+                                        <label ng-if="camera.active">Deactivate</label>
+                                        <label ng-if="!camera.active">Activate</label>
+                                    </a>
+                                </li>
+                                <li class="divider"></li>
+                                <li>
+                                    <a ng-click="camCtrl.remove_camera(camera.name,camera.id)">
+                                        <label class="text-danger">Remove</label>
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                    <ul class="list-group">
+                        <li class="list-group-item">
+                            <label>Api Key:</label> {{camera.api_key}}
+                        </li>
+                        <li class="list-group-item">
+                            <label>Registered:</label> {{camera.registered|date}}
+                        </li>
+                        <li class="list-group-item" ng-show="camera.last_access">
+                            <label>Last access:</label> {{camera.last_access|date}}
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,20 @@
+<div class="modal-header">
+    <h4 class="modal-title">{{selected_image.camera}} | {{selected_image.date_saved | date}} {{selected_image.time_saved }} </h4>
+</div>
+<div class="modal-body">
+    <img id="image" class="img-responsive" ng-src="{{selected_image.url}}">
+</div>
+<div class="modal-footer">
+        <button type="button"
+                class="btn btn-primary" tooltip="Previous"
+                ng-click="prev();">&larr;
+        </button>
+        <button type="button"
+                class="btn btn-danger"
+                ng-click="remove_image();">Remove
+        </button>
+        <button type="button"
+                class="btn btn-primary"
+                ng-click="next();" tooltip="Previous">&rarr;
+        </button>
+</div>

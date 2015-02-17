@@ -1,0 +1,17 @@
+<div ng-include src="'static/partials/navbar.html'"></div>
+<div class="container" ng-controller="ImagesListCtrl as imgCtrl">
+    <div class="page-header">
+        <h2>Captured Images</h2>
+    </div>
+    <div ng-repeat="group in images | groupBy: 'date_saved' | toArray:true | orderBy : 'date_saved'">
+        <h4>{{ group.$key | date }}</h4>
+        <ul class="image_gallery row">
+            <li class="col-lg-3 col-md-4 col-xs-6" ng-repeat="image in group | orderBy : '-image.time_saved'">
+                <a class="thumbnail" ng-click="opeImageModal(image);">
+                    <img ng-src="{{image.url}}" class="img-responsive" width="400px" height="200px">
+                </a>
+            </li>
+        </ul>
+    </div>
+</div>
+

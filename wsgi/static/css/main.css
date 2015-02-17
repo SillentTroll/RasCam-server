@@ -1,0 +1,21 @@
+.image_gallery {
+    padding:0 0 0 0;
+    margin:0 0 0 0;
+}
+.image_gallery li {
+    list-style:none;
+    margin-bottom:25px;
+}
+.image_gallery li img {
+    cursor: pointer;
+}
+
+.modal-header{
+    text-align:center;
+}
+.modal-footer {
+    text-align:center;
+}
+.modal-footer .btn{
+    margin-right:5px;
+}
