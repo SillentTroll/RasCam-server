@@ -1,7 +1,6 @@
 import pickle
 
 from bson import ObjectId
-
 from flask import (make_response, jsonify, render_template)
 from gridfs import NoFile
 from werkzeug.exceptions import abort
@@ -39,7 +38,7 @@ def serve_gridfs_file(oid):
             response = make_response(image_file.read())
             response.mimetype = image_file.content_type
             response.headers['Access-Control-Allow-Origin'] = '*'
-            response.headers['Cache-Control'] = 'particular, max-age=600'
+            response.headers['Cache-Control'] = 'particular, max-age=31104000'
             redis_store.set(oid, pickle.dumps(response))
             return response
     except NoFile:
