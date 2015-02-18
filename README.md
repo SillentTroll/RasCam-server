@@ -1,5 +1,5 @@
 # RasCam-server
-Server part of RasCam project. 
+Server part of [RasCam](https://github.com/SillentTroll/rascam) project.
 
 Does the management of the configured cameras and captured images.
 
