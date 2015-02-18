@@ -12,7 +12,6 @@ Does the management of the configured cameras and captured images.
 ##Installation
 I have decided to use [Docker](https://www.docker.com) and [Fig](http://www.fig.sh) for app management and deploy.
 So, assuming your already have a server accessible from your Raspberry Pi device, ssh into it and execute:
-
 ```
 git clone https://github.com/SillentTroll/rascam_server
 cd rascam_server
@@ -25,8 +24,6 @@ It will get latest version, build the Docker containers and run them all in back
 Open a browser and go to your server. 
 First of all you will have to register the admin user:
 ![](https://raw.githubusercontent.com/SillentTroll/rascam_server/master/images/first_config.png)
-Now login with the newly created user and feel all the power!
+Now login with the newly created user and feel the power!
 ![](https://raw.githubusercontent.com/SillentTroll/rascam_server/master/images/login.png)
-Also you can now go and configure your Raspberry Pi.
-
-
+You can now go and configure the Raspberry Pi.

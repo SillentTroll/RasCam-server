@@ -11,6 +11,8 @@ db:
  image: dockerfile/mongodb
  ports:
   - "27027:27017"
+ volumes:
+  - /data/db:/data/db
  command: mongod --smallfiles
 redis:
  image: dockerfile/redis
