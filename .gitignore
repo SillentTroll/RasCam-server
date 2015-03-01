@@ -95,6 +95,7 @@ out/
 
 ansible
 log
-fig_prod.yml
-test/
+docker-compose-prod.yml
+Dockerfile_prod
+
 

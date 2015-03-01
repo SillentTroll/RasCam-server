@@ -10,7 +10,7 @@ Does the management of the configured cameras and captured images.
  - [Redis](http://redis.io) for caching
 
 ##Installation
-I have decided to use [Docker](https://www.docker.com) and [Fig](http://www.fig.sh) for app management and deploy.
+I have decided to use [Docker](https://www.docker.com) and [docker-compose](https://github.com/docker/compose) for app management and deploy.
 So, assuming your already have a server accessible from your Raspberry Pi device, ssh into it and execute:
 ```
 git clone https://github.com/SillentTroll/rascam_server

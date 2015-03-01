@@ -30,5 +30,5 @@ var/
 ansible
 log
 test
-fig.yml
-fig_prod.yml
+docker-compose.yml
+docker-compose-prod.yml
