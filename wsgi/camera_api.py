@@ -8,6 +8,7 @@ from bson import ObjectId
 from flask import jsonify
 from flask_jwt import jwt_required, current_user
 from flask_restful import reqparse
+import pymongo
 import werkzeug
 from werkzeug.utils import secure_filename
 from flask.ext import restful
@@ -150,6 +151,23 @@ class CamerasController(restful.Resource):
                 "registered": camera.get('registered'),
                 "ip": camera.get('ip'),
             })
+        for camera in cameras:
+            # get the last history entry of the camera
+            last_events = DB.cams.history.find({"camera": camera.get('name')}) \
+                .sort("when", pymongo.DESCENDING) \
+                .limit(5)
+            if last_events:
+                camera['last_events'] = list()
+                for last_event in last_events:
+                    camera['last_events'].append({
+                        "when": last_event.get("when"),
+                        "user": last_event.get("user"),
+                        "action": last_event.get("action"),
+                        "new_state": last_event.get("new_state")
+                    })
+            last_image = DB.images.find_one({"camera": camera.get('name')}, sort=[("date_saved", pymongo.DESCENDING)])
+            if last_image:
+                camera["last_image_date"] = last_image.get("date_saved")
         return jsonify(result="OK", cameras=cameras)
 
     @jwt_required()

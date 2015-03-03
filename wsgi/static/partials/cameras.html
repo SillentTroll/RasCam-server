@@ -34,6 +34,9 @@
                         </div>
                     </div>
                     <ul class="list-group">
+                        <li class="list-group-item" ng-show="camera.last_image_date">
+                            <label>Last image:</label> {{camera.last_image_date}}
+                        </li>
                         <li class="list-group-item">
                             <label>Api Key:</label> {{camera.api_key}}
                         </li>
@@ -42,6 +45,18 @@
                         </li>
                         <li class="list-group-item" ng-show="camera.last_access">
                             <label>Last access:</label> {{camera.last_access|date}}
+                        </li>    
+                        <li class="list-group-item" ng-show="camera.last_events">
+                            <label>History (last {{camera.last_events.length}}):</label>
+                            <ul class="list-group">
+                                <li class="list-group-item" ng-repeat="last_event in camera.last_events">
+                                <span ng-show="last_event.action === 'change_state'">
+                                    User <strong>{{last_event.user}}</strong> changed camera state to <strong>{{last_event.new_state
+                                    ? "Activated":"Deactivated"}}</strong>
+                                    on <strong>{{last_event.when}}</strong>
+                                </span>
+                                </li>
+                            </ul>
                         </li>
                     </ul>
                 </div>
