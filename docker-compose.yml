@@ -8,11 +8,9 @@ web:
  - db
  - redis
 db:
- image: dockerfile/mongodb
+ image: mongo
  ports:
   - "27027:27017"
- volumes:
-  - /data/db:/data/db
  command: mongod --smallfiles
 redis:
- image: dockerfile/redis
+ image: redis

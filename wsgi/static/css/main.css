@@ -19,3 +19,8 @@
 .modal-footer .btn{
     margin-right:5px;
 }
+
+.streaming_img{
+     max-height:640px;
+     max-width:400px;
+}

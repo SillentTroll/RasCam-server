@@ -1,0 +1,24 @@
+<div ng-include src="'static/partials/navbar.html'"></div>
+
+<div class="container" ng-controller="StreamsListCtrl as streamingCtrl">
+    <div class="page-header">
+        <h2>Streaming</h2>
+    </div>
+    <ul class="image_gallery row">
+        <li class="col-lg-6 col-md-6 col-xs-12" ng-repeat="camera in cameras">
+            <div class="thumbnail">
+                <img ng-src="/api/v1/streams/{{camera.id}}"
+                     class="streaming_img">
+
+                <div class="caption">
+                    <h4>{{camera.name}}</h4>
+                    <button ng-class="{'btn btn-danger btn-block':camera.active, 'btn btn-primary btn-block':!camera.active}"
+                            ng-click="streamingCtrl.change_state(camera.id)">
+                        <label ng-if="camera.active">Deactivate</label>
+                        <label ng-if="!camera.active">Activate</label>
+                    </button>
+                </div>
+            </div>
+        </li>
+    </ul>
+</div>

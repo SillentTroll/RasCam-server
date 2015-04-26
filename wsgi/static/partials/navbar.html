@@ -16,6 +16,7 @@
             <ul class="nav navbar-nav" ng-show="navCtrl.hasToken">
                 <li ng-class="{ active: isActive('/')}"><a href="/">Home</a></li>
                 <li ng-class="{ active: isActive('/cameras')}"><a href="/cameras">Cameras</a></li>
+                <li ng-class="{ active: isActive('/streaming')}"><a href="/streaming">Streaming</a></li>
             </ul>
             <div class="navbar-form navbar-right" ng-show="navCtrl.hasToken">
                 <button ng-click="logout()" class="btn">

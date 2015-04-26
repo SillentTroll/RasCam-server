@@ -1,9 +1,7 @@
-import datetime
-
 from bson import ObjectId
 from flask import url_for, jsonify
 from flask.ext import restful
-from flask_jwt import jwt_required, current_user
+from flask_jwt import jwt_required
 import pymongo
 
 from core import DB, FS, redis_store
@@ -42,10 +40,5 @@ class ImageController(restful.Resource):
             FS.delete(ObjectId(image.get("image_id")))
             redis_store.delete(image.get("image_id"))
             DB.images.remove(image)
-            DB.images.history.insert({
-                'action': 'remove',
-                'image_id': image_id,
-                'when': datetime.datetime.now(),
-                'user': current_user.email
-            })
+
         return {"result": "OK"}

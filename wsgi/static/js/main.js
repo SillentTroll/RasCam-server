@@ -5,6 +5,7 @@
                                                 'rascam.modules.images',
                                                 'rascam.modules.users',
                                                 'rascam.modules.auth',
+                                                'rascam.modules.streaming',
                                                 'angular.filter']);
 
     app.config(['$routeProvider','$locationProvider',
@@ -16,6 +17,9 @@
                     }).when('/cameras', {
                         templateUrl: 'static/partials/cameras.html',
                         controller: 'CamListCtrl'
+                    }).when('/streaming', {
+                        templateUrl: 'static/partials/streaming.html',
+                        controller: 'StreamsListCtrl'
                     }).when('/users/login', {
                         templateUrl: 'static/partials/login.html',
                         controller: 'LoginCtrl'

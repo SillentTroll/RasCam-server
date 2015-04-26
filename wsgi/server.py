@@ -2,6 +2,7 @@ import pickle
 
 from bson import ObjectId
 from flask import (make_response, jsonify, render_template)
+from flask_jwt import jwt_required
 from gridfs import NoFile
 from werkzeug.exceptions import abort
 
@@ -12,6 +13,7 @@ from models import User
 @app.route('/')
 @app.route('/cameras')
 @app.route('/images')
+@app.route('/streaming')
 @app.route('/users/login')
 @app.route('/users/configure')
 def index():
@@ -83,12 +85,15 @@ def load_user(payload):
 
 
 def register_apis(api):
-    from camera_api import CameraStateController, UploadImage, CameraController, CamerasController
+    from camera_api import CameraStateController, UploadImage, \
+        CameraController, CamerasController, StreamController, StreamingController
 
     api.add_resource(CameraStateController, '/api/v1/cam/state', '/api/v1/cam/<string:camera_id>/state')
     api.add_resource(UploadImage, '/api/v1/cam/upload')
     api.add_resource(CameraController, '/api/v1/cam/<string:camera_id>')
     api.add_resource(CamerasController, '/api/v1/cam')
+    api.add_resource(StreamController, '/api/v1/streams/<string:camera_id>')
+    api.add_resource(StreamingController, '/api/v1/streams')
 
     from images_api import ImagesController, ImageController
 

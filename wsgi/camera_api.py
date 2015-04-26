@@ -5,15 +5,15 @@ import mimetypes
 import random
 
 from bson import ObjectId
-from flask import jsonify
+from flask import jsonify, Response
 from flask_jwt import jwt_required, current_user
-from flask_restful import reqparse
+from flask_restful import reqparse, abort
 import pymongo
 import werkzeug
 from werkzeug.utils import secure_filename
 from flask.ext import restful
 
-from core import app, FS, DB
+from core import app, DB, FS, redis_store
 
 
 api_request_parser = reqparse.RequestParser()
@@ -26,7 +26,10 @@ def allowed_file(filename):
 
 
 def get_cam_by_id(camera_id):
-    return DB.cams.find_one({"_id": ObjectId(camera_id)})
+    if ObjectId.is_valid(camera_id):
+        return DB.cams.find_one({"_id": ObjectId(camera_id)})
+    else:
+        return None
 
 
 def requires_api_key(f):
@@ -55,7 +58,7 @@ class CameraStateController(restful.Resource):
         args = api_request_parser.parse_args()
         valid_cam = DB.cams.find_one({"api_key": args['api_key']})
         if valid_cam:
-            return {'result': 'OK', 'state': valid_cam.get('active')}
+            return {'result': 'OK', 'camera_state': valid_cam.get('active')}
         return {'result': 'NOK'}, 401
 
 
@@ -107,9 +110,9 @@ class UploadImage(restful.Resource):
                 "date_saved": datetime.datetime.now(),
                 "date_taken": args.get('date') if 'date' in args else datetime.datetime.now(),
                 "camera": request_cam.get('name'),
-                "event": args.get('event')
             })
-            return jsonify(status="OK", oid=str(oid))
+            redis_store.publish(str(request_cam.get("_id")) + ':stream', oid)
+            return jsonify(status="OK", oid=str(oid), camera_state=request_cam.get('active'))
         return jsonify(status="NOK", error="not allowed file")
 
 
@@ -132,6 +135,41 @@ class CameraController(restful.Resource):
         return jsonify(result="NOK")
 
 
+class StreamController(restful.Resource):
+    @staticmethod
+    def get_camera_frame(camera_id):
+        pubsub = redis_store.pubsub()
+        pubsub.subscribe(camera_id + ':stream')
+        for message in pubsub.listen():
+            app.logger.debug("Got this %s, data", message)
+            if ObjectId.is_valid(message.get('data')):
+                image_file = FS.get(ObjectId(message.get('data')))
+                yield (b'--frame\r\n'
+                       b'Content-Type: image/jpeg\r\n\r\n' + image_file.read() + b'\r\n')
+
+    @staticmethod
+    def get(camera_id):
+        if camera_id and get_cam_by_id(camera_id):
+            return Response(StreamController.get_camera_frame(camera_id),
+                            mimetype='multipart/x-mixed-replace; boundary=frame')
+        else:
+            abort(404)
+
+
+class StreamingController(restful.Resource):
+    @staticmethod
+    @jwt_required()
+    def get():
+        cameras = []
+        for camera in DB.cams.find():
+            cameras.append({
+                "id": str(camera.get("_id")),
+                "name": camera.get('name'),
+                "active": camera.get('active'),
+            })
+        return jsonify(result="OK", cameras=cameras)
+
+
 class CamerasController(restful.Resource):
     def __init__(self):
         self.register_parser = reqparse.RequestParser()
@@ -149,7 +187,6 @@ class CamerasController(restful.Resource):
                 "active": camera.get('active'),
                 "last_access": camera.get('last_access'),
                 "registered": camera.get('registered'),
-                "ip": camera.get('ip'),
             })
         for camera in cameras:
             # get the last history entry of the camera
