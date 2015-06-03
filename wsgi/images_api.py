@@ -1,10 +1,12 @@
+from datetime import datetime
+
 from bson import ObjectId
 from flask import url_for, jsonify
 from flask.ext import restful
-from flask_jwt import jwt_required
+from flask_jwt import jwt_required, current_user
 import pymongo
 
-from core import DB, FS, redis_store
+from core import app, DB, FS, redis_store
 
 
 class ImagesController(restful.Resource):
@@ -30,6 +32,28 @@ class ImagesController(restful.Resource):
 
         return jsonify(images=results)
 
+    @staticmethod
+    @jwt_required()
+    def delete(day):
+        date_to_remove = datetime.strptime(day, "%Y-%m-%d")
+        images_to_delete = DB.images.find(
+            {"$or": [{"date_saved": {"$lte": date_to_remove}}, {"date_saved": {"$gte": date_to_remove}}]})
+        images_to_delete_count = images_to_delete.count()
+        app.logger.warn("Going to remove %s images from day = %s", images_to_delete_count, date_to_remove)
+
+        for image_to_delete in images_to_delete:
+            ImageController.delete(str(image_to_delete.get("_id")))
+
+        if images_to_delete_count > 0:
+            DB.images.history.insert({
+                'action': 'delete_all_images',
+                'day': date_to_remove,
+                'count': images_to_delete_count,
+                'when': datetime.now(),
+                'user': current_user.email
+            })
+        return {"result": "OK"}
+
 
 class ImageController(restful.Resource):
     @staticmethod
@@ -38,7 +62,11 @@ class ImageController(restful.Resource):
         image = DB.images.find_one({"_id": ObjectId(image_id)})
         if image:
             FS.delete(ObjectId(image.get("image_id")))
-            redis_store.delete(image.get("image_id"))
+            try:
+                redis_store.delete(image.get("image_id"))
+            except Exception, e:
+                app.logger.error("Could not delete the image from redis")
+                app.log_exception(e)
             DB.images.remove(image)
 
         return {"result": "OK"}

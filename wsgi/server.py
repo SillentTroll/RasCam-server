@@ -2,7 +2,6 @@ import pickle
 
 from bson import ObjectId
 from flask import (make_response, jsonify, render_template)
-from flask_jwt import jwt_required
 from gridfs import NoFile
 from werkzeug.exceptions import abort
 
@@ -32,7 +31,13 @@ def is_configured():
 @app.route('/files/<oid>')
 def serve_gridfs_file(oid):
     try:
-        cached_response = redis_store.get(oid)
+        cached_response = None
+        try:
+            cached_response = redis_store.get(oid)
+        except Exception, e:
+            app.logger.error("Could not get the image from redis")
+            app.log_exception(e)
+
         if cached_response:
             return pickle.loads(cached_response)
         else:
@@ -41,7 +46,11 @@ def serve_gridfs_file(oid):
             response.mimetype = image_file.content_type
             response.headers['Access-Control-Allow-Origin'] = '*'
             response.headers['Cache-Control'] = 'particular, max-age=31104000'
-            redis_store.set(oid, pickle.dumps(response))
+            try:
+                redis_store.set(oid, pickle.dumps(response))
+            except Exception, e:
+                app.logger.error("Could not add the image to redis")
+                app.log_exception(e)
             return response
     except NoFile:
         abort(404)
@@ -97,7 +106,7 @@ def register_apis(api):
 
     from images_api import ImagesController, ImageController
 
-    api.add_resource(ImagesController, '/api/v1/images')
+    api.add_resource(ImagesController, '/api/v1/images', '/api/v1/images/<string:day>')
     api.add_resource(ImageController, '/api/v1/image/<string:image_id>')
 
     from users_api import UserRegisterController

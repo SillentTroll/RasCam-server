@@ -41,6 +41,31 @@
 
             $scope.load_all();
 
+            $scope.delete_all_from_day = function(day, count){
+                bootbox.dialog({
+                  message: "<h4>Are you sure you want to delete all <strong>"+count+"</strong> images, captured on <strong>" + day + "</strong>?<h4>",
+                  size:"medium",
+                  buttons: {
+                    success: {
+                      label: "Cancel",
+                      className: "btn-default",
+                      callback: function() {
+
+                      }
+                    },
+                    danger: {
+                      label: "Yes, remove all",
+                      className: "btn-danger",
+                      callback: function() {
+                           $http.delete('/api/v1/images/'+day).success(function(data) {
+                                $scope.load_all();
+                           });
+                      }
+                    },
+                  }
+                });
+            }
+
             $scope.opeImageModal = function (image) {
                 var modalInstance = $modal.open({
                        templateUrl: 'static/partials/modal/image_modal.html',
