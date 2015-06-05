@@ -32,3 +32,4 @@ log
 test
 docker-compose.yml
 docker-compose-prod.yml
+dockerfiles

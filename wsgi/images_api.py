@@ -1,4 +1,4 @@
-from datetime import datetime
+import datetime
 
 from bson import ObjectId
 from flask import url_for, jsonify
@@ -35,11 +35,17 @@ class ImagesController(restful.Resource):
     @staticmethod
     @jwt_required()
     def delete(day):
-        date_to_remove = datetime.strptime(day, "%Y-%m-%d")
+        date_to_remove_min = datetime.datetime.strptime(day, "%Y-%m-%d")
+        date_to_remove_max = date_to_remove_min + datetime.timedelta(1)
+
         images_to_delete = DB.images.find(
-            {"$or": [{"date_saved": {"$lte": date_to_remove}}, {"date_saved": {"$gte": date_to_remove}}]})
+            {"$and": [{"date_saved": {"$gte": date_to_remove_min}},
+                      {"date_saved": {"$lte": date_to_remove_max}}]})
         images_to_delete_count = images_to_delete.count()
-        app.logger.warn("Going to remove %s images from day = %s", images_to_delete_count, date_to_remove)
+        app.logger.warn("Going to remove %s images from  %s to %s",
+                        images_to_delete_count,
+                        date_to_remove_min,
+                        date_to_remove_max)
 
         for image_to_delete in images_to_delete:
             ImageController.delete(str(image_to_delete.get("_id")))
@@ -47,9 +53,9 @@ class ImagesController(restful.Resource):
         if images_to_delete_count > 0:
             DB.images.history.insert({
                 'action': 'delete_all_images',
-                'day': date_to_remove,
+                'day': date_to_remove_min,
                 'count': images_to_delete_count,
-                'when': datetime.now(),
+                'when': datetime.datetime.now(),
                 'user': current_user.email
             })
         return {"result": "OK"}
