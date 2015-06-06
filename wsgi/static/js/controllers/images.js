@@ -6,28 +6,28 @@
         function ($scope, $http, $modalInstance, selected_image, images) {
 
         $scope.selected_image = selected_image;
-        $scope.images = images;
+        $scope.modal_images = images;
 
         $scope.remove_image = function(){
             $http.delete('/api/v1/image/'+$scope.selected_image.id).success(function(data) {
-                var index = $scope.images.indexOf($scope.selected_image);
+                var index = $scope.modal_images.indexOf($scope.selected_image);
+                $scope.modal_images.splice(index, 1);
                 $scope.next();
-                $scope.images.splice(index, 1);
             });
         };
         $scope.next = function(){
-            var index = $scope.images.indexOf($scope.selected_image) + 1;
-            if (index === $scope.images.length){
+            var index = $scope.modal_images.indexOf($scope.selected_image) + 1;
+            if (index === $scope.modal_images.length){
                 index = 0;
             }
-            $scope.selected_image = $scope.images[index];
+            $scope.selected_image = $scope.modal_images[index];
         }
         $scope.prev = function(){
-            var index = $scope.images.indexOf($scope.selected_image) - 1;
+            var index = $scope.modal_images.indexOf($scope.selected_image) - 1;
             if (index < 0){
-                index = $scope.images.length - 1;
+                index = $scope.modal_images.length - 1;
             }
-            $scope.selected_image = $scope.images[index]
+            $scope.selected_image = $scope.modal_images[index]
         }
     });
 
@@ -70,6 +70,7 @@
                 var modalInstance = $modal.open({
                        templateUrl: 'static/partials/modal/image_modal.html',
                        controller: 'ImageModalCtrl',
+                       size: 'lg',
                        resolve: {
                          selected_image: function () {
                             return image;
