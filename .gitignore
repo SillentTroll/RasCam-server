@@ -99,5 +99,6 @@ docker-compose-prod.yml
 Dockerfile_prod
 test
 dockerfiles
+wsgi/config/config.py
 
 
