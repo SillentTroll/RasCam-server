@@ -5,8 +5,10 @@ from flask import (make_response, jsonify, render_template)
 from gridfs import NoFile
 from werkzeug.exceptions import abort
 
-from core import app, api, FS, jwt, redis_store
+from core import app, api, FS, jwt, redis_client
 from models import User
+from camera_api import CameraStateController
+from slack_commands import SlackCommands
 
 
 @app.route('/')
@@ -31,13 +33,7 @@ def is_configured():
 @app.route('/files/<oid>')
 def serve_gridfs_file(oid):
     try:
-        cached_response = None
-        try:
-            cached_response = redis_store.get(oid)
-        except Exception, e:
-            app.logger.error("Could not get the image from redis")
-            app.log_exception(e)
-
+        cached_response = redis_client.retrieve_image(oid)
         if cached_response:
             return pickle.loads(cached_response)
         else:
@@ -46,11 +42,6 @@ def serve_gridfs_file(oid):
             response.mimetype = image_file.content_type
             response.headers['Access-Control-Allow-Origin'] = '*'
             response.headers['Cache-Control'] = 'particular, max-age=31104000'
-            try:
-                redis_store.set(oid, pickle.dumps(response))
-            except Exception, e:
-                app.logger.error("Could not add the image to redis")
-                app.log_exception(e)
             return response
     except NoFile:
         abort(404)
@@ -94,7 +85,7 @@ def load_user(payload):
 
 
 def register_apis(api):
-    from camera_api import CameraStateController, UploadImage, \
+    from camera_api import UploadImage, \
         CameraController, CamerasController, StreamController, StreamingController
 
     api.add_resource(CameraStateController, '/api/v1/cam/state', '/api/v1/cam/<string:camera_id>/state')
@@ -112,6 +103,8 @@ def register_apis(api):
     from users_api import UserRegisterController
 
     api.add_resource(UserRegisterController, "/api/v1/users/register")
+
+    SlackCommands(app)
 
 
 register_apis(api)

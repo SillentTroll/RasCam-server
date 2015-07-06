@@ -10,3 +10,5 @@ wtforms
 pymongo
 uwsgi
 redis
+uwsgi_tasks
+flask_slack

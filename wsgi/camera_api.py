@@ -5,7 +5,7 @@ import mimetypes
 import random
 
 from bson import ObjectId
-from flask import jsonify, Response
+from flask import jsonify, Response, url_for
 from flask_jwt import jwt_required, current_user
 from flask_restful import reqparse, abort
 import pymongo
@@ -13,8 +13,8 @@ import werkzeug
 from werkzeug.utils import secure_filename
 from flask.ext import restful
 
-from core import app, DB, FS, redis_store
-
+import notifier
+from core import app, DB, FS, redis_client
 
 api_request_parser = reqparse.RequestParser()
 api_request_parser.add_argument('api_key', type=str, required=True, help="Missing api key")
@@ -61,27 +61,31 @@ class CameraStateController(restful.Resource):
             return {'result': 'OK', 'camera_state': valid_cam.get('active')}
         return {'result': 'NOK'}, 401
 
-
     @staticmethod
     @jwt_required()
     def post(camera_id):
         if camera_id:
             camera = get_cam_by_id(camera_id)
             if camera:
-                camera['active'] = not camera.get('active')
-                DB.cams.save(camera)
-                DB.cams.history.insert({
-                    'action': 'change_state',
-                    'camera': camera.get('name'),
-                    'when': datetime.datetime.now(),
-                    'new_state': camera.get('active'),
-                    'user': current_user.email
-                })
+                CameraStateController.change_camera_state(camera, not camera.get('active'), current_user.email)
                 return jsonify(result="OK", new_state=camera.get('active'), id=camera_id)
             else:
                 return jsonify(result="NOK", error="Invalid camera id")
 
         return jsonify(result="NOK")
+
+    @staticmethod
+    def change_camera_state(camera, new_state, user):
+        camera['active'] = new_state
+        DB.cams.save(camera)
+        DB.cams.history.insert({
+            'action': 'change_state',
+            'camera': camera.get('name'),
+            'when': datetime.datetime.now(),
+            'new_state': camera.get('active'),
+            'user': user
+        })
+        notifier.notify_camera_state_changed(camera)
 
 
 file_upload_parser = api_request_parser.copy()
@@ -111,7 +115,8 @@ class UploadImage(restful.Resource):
                 "date_taken": args.get('date') if 'date' in args else datetime.datetime.now(),
                 "camera": request_cam.get('name'),
             })
-            redis_store.publish(str(request_cam.get("_id")) + ':stream', oid)
+            notifier.notify_new_image(request_cam, url_for('serve_gridfs_file', oid=str(oid), _external=True))
+            redis_client.publish(str(request_cam.get("_id")) + ':stream', oid)
             return jsonify(status="OK", oid=str(oid), camera_state=request_cam.get('active'))
         return jsonify(status="NOK", error="not allowed file")
 
@@ -138,14 +143,17 @@ class CameraController(restful.Resource):
 class StreamController(restful.Resource):
     @staticmethod
     def get_camera_frame(camera_id):
-        pubsub = redis_store.pubsub()
-        pubsub.subscribe(camera_id + ':stream')
-        for message in pubsub.listen():
-            app.logger.debug("Got this %s, data", message)
-            if ObjectId.is_valid(message.get('data')):
-                image_file = FS.get(ObjectId(message.get('data')))
-                yield (b'--frame\r\n'
-                       b'Content-Type: image/jpeg\r\n\r\n' + image_file.read() + b'\r\n')
+        pubsub = redis_client.get_pubsub(camera_id + ':stream')
+        if pubsub:
+            for message in pubsub.listen():
+                app.logger.debug("Got this %s, data", message)
+                if ObjectId.is_valid(message.get('data')):
+                    image_file = FS.get(ObjectId(message.get('data')))
+                    yield (b'--frame\r\n'
+                           b'Content-Type: image/jpeg\r\n\r\n' + image_file.read() + b'\r\n')
+        else:
+            yield (b'--frame\r\n'
+                   b'Content-Type: image/jpeg\r\n\r\n\r\n')
 
     @staticmethod
     def get(camera_id):
@@ -224,4 +232,3 @@ class CamerasController(restful.Resource):
                 "active": True
             })
             return {'status': "OK", 'api_key': new_cam_api_key}
-

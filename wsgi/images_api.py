@@ -6,7 +6,7 @@ from flask.ext import restful
 from flask_jwt import jwt_required, current_user
 import pymongo
 
-from core import app, DB, FS, redis_store
+from core import app, DB, FS, redis_client
 
 
 class ImagesController(restful.Resource):
@@ -68,11 +68,7 @@ class ImageController(restful.Resource):
         image = DB.images.find_one({"_id": ObjectId(image_id)})
         if image:
             FS.delete(ObjectId(image.get("image_id")))
-            try:
-                redis_store.delete(image.get("image_id"))
-            except Exception, e:
-                app.logger.error("Could not delete the image from redis")
-                app.log_exception(e)
+            redis_client.delete_image(image.get("image_id"))
             DB.images.remove(image)
 
         return {"result": "OK"}
